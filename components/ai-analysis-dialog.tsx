@@ -108,29 +108,68 @@ export function AIAnalysisDialog({ studentData, children }: AIAnalysisDialogProp
   }
 
   const formatAnalysis = (text: string) => {
-    const sections = text.split(/\d+\.\s+/).filter(Boolean)
-    const icons = [BookOpen, Target, Users, AlertCircle, Users, TrendingUp, Award]
+    // Handle markdown headers and clean up formatting
+    const cleanedText = text
+      .replace(/#{1,6}\s*/g, "") // Remove markdown headers
+      .replace(/\*\*(.*?)\*\*/g, "$1") // Remove bold markdown
+      .replace(/\*(.*?)\*/g, "$1") // Remove italic markdown
+      .trim()
 
-    return sections.map((section, index) => {
-      const [title, ...content] = section.split(":")
-      const Icon = icons[index] || BookOpen
+    // Split by numbered sections (1., 2., etc.) or by double newlines
+    const sections = cleanedText.split(/(?:\d+\.\s+|\n\n+)/).filter((section) => section.trim().length > 0)
 
-      return (
-        <Card key={index} className="mb-4">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Icon className="w-5 h-5 text-purple-600" />
-              {title.trim()}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
-              {content.join(":").trim()}
-            </div>
-          </CardContent>
-        </Card>
-      )
-    })
+    const icons = [BookOpen, Target, Users, AlertCircle, TrendingUp, Award, Brain]
+    const defaultTitles = [
+      "Learning Profile",
+      "Teaching Strategies",
+      "Social Considerations",
+      "Potential Challenges",
+      "Growth Opportunities",
+      "Recommendations",
+      "Additional Insights",
+    ]
+
+    return sections
+      .map((section, index) => {
+        // Try to extract title from the beginning of the section
+        const lines = section
+          .trim()
+          .split("\n")
+          .filter((line) => line.trim())
+        if (lines.length === 0) return null
+
+        let title = defaultTitles[index] || `Section ${index + 1}`
+        let content = section.trim()
+
+        // Check if first line looks like a title (short and ends with colon or is all caps)
+        const firstLine = lines[0].trim()
+        if (firstLine.length < 50 && (firstLine.endsWith(":") || firstLine === firstLine.toUpperCase())) {
+          title = firstLine.replace(":", "")
+          content = lines.slice(1).join("\n").trim()
+        } else if (firstLine.includes(":")) {
+          // Split on first colon
+          const colonIndex = firstLine.indexOf(":")
+          title = firstLine.substring(0, colonIndex).trim()
+          content = (firstLine.substring(colonIndex + 1) + "\n" + lines.slice(1).join("\n")).trim()
+        }
+
+        const Icon = icons[index] || BookOpen
+
+        return (
+          <Card key={index} className="mb-4">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Icon className="w-5 h-5 text-purple-600" />
+                {title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{content}</div>
+            </CardContent>
+          </Card>
+        )
+      })
+      .filter(Boolean)
   }
 
   return (

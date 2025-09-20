@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, Brain, Plus, Eye, LogOut, Settings, User } from "lucide-react"
 import Link from "next/link"
 import { AIAnalysisDialog } from "@/components/ai-analysis-dialog"
+import { StudentDetailsDialog } from "@/components/student-details-dialog"
+import { DeleteStudentButton } from "@/components/delete-student-button"
 
 interface StudentAssessment {
   id: string
@@ -160,10 +162,12 @@ export default async function TeacherDashboard() {
                           </CardDescription>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            <Eye className="w-4 h-4 mr-2" />
-                            View Details
-                          </Button>
+                          <StudentDetailsDialog studentData={assessment}>
+                            <Button variant="outline" size="sm">
+                              <Eye className="w-4 h-4 mr-2" />
+                              View Details
+                            </Button>
+                          </StudentDetailsDialog>
                           <AIAnalysisDialog studentData={assessment}>
                             <Button
                               variant="outline"
@@ -174,6 +178,14 @@ export default async function TeacherDashboard() {
                               AI Analysis
                             </Button>
                           </AIAnalysisDialog>
+                          <DeleteStudentButton
+                            assessmentId={assessment.id}
+                            studentName={
+                              assessment.profiles?.first_name && assessment.profiles?.last_name
+                                ? `${assessment.profiles.first_name} ${assessment.profiles.last_name}`
+                                : assessment.profiles?.email || "Unknown Student"
+                            }
+                          />
                         </div>
                       </div>
                     </CardHeader>
