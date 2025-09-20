@@ -95,6 +95,31 @@ export default async function TeacherDashboard() {
     return colors[style as keyof typeof colors] || "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
   }
 
+  const getStudentDisplayName = (assessment: StudentAssessment) => {
+    // Try first name + last name
+    if (assessment.profiles?.first_name && assessment.profiles?.last_name) {
+      return `${assessment.profiles.first_name} ${assessment.profiles.last_name}`
+    }
+
+    // Try just first name
+    if (assessment.profiles?.first_name) {
+      return assessment.profiles.first_name
+    }
+
+    // Use email username (part before @)
+    if (assessment.profiles?.email) {
+      const emailUsername = assessment.profiles.email.split("@")[0]
+      // Capitalize first letter and replace dots/underscores with spaces
+      return emailUsername
+        .replace(/[._]/g, " ")
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ")
+    }
+
+    return "Student"
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-8">
@@ -152,11 +177,7 @@ export default async function TeacherDashboard() {
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-lg">
-                            {assessment.profiles?.first_name && assessment.profiles?.last_name
-                              ? `${assessment.profiles.first_name} ${assessment.profiles.last_name}`
-                              : assessment.profiles?.email || "Unknown Student"}
-                          </CardTitle>
+                          <CardTitle className="text-lg">{getStudentDisplayName(assessment)}</CardTitle>
                           <CardDescription>
                             Completed on {new Date(assessment.created_at).toLocaleDateString()}
                           </CardDescription>
@@ -181,9 +202,8 @@ export default async function TeacherDashboard() {
                           <DeleteStudentButton
                             assessmentId={assessment.id}
                             studentName={
-                              assessment.profiles?.first_name && assessment.profiles?.last_name
-                                ? `${assessment.profiles.first_name} ${assessment.profiles.last_name}`
-                                : assessment.profiles?.email || "Unknown Student"
+                              /* Using improved name display function */
+                              getStudentDisplayName(assessment)
                             }
                           />
                         </div>

@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 
 interface AssessmentData {
+  name: string
   personalityType: string
   learningStyle: string
   socialPreference: string
@@ -23,6 +24,12 @@ interface AssessmentData {
 }
 
 const questions = [
+  {
+    id: "name",
+    title: "What is your name?",
+    type: "text",
+    placeholder: "Enter your full name",
+  },
   {
     id: "personalityType",
     title: "What describes you best?",
@@ -130,6 +137,19 @@ export default function AssessmentPage() {
         return
       }
 
+      if (answers.name) {
+        const nameParts = answers.name.trim().split(" ")
+        const firstName = nameParts[0] || ""
+        const lastName = nameParts.slice(1).join(" ") || ""
+
+        await supabase.from("profiles").upsert({
+          id: user.id,
+          first_name: firstName,
+          last_name: lastName,
+          updated_at: new Date().toISOString(),
+        })
+      }
+
       const assessmentData = {
         student_id: user.id,
         personality_type: answers.personalityType || "",
@@ -176,22 +196,38 @@ export default function AssessmentPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-xl">{currentQ.title}</CardTitle>
-              <CardDescription>Choose the option that best describes you</CardDescription>
+              <CardDescription>
+                {currentQ.type === "text"
+                  ? "Please enter your information"
+                  : "Choose the option that best describes you"}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <RadioGroup value={currentAnswer || ""} onValueChange={handleAnswer}>
-                {currentQ.options.map((option) => (
-                  <div
-                    key={option.value}
-                    className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
-                  >
-                    <RadioGroupItem value={option.value} id={option.value} className="mt-1" />
-                    <Label htmlFor={option.value} className="flex-1 cursor-pointer leading-relaxed">
-                      {option.label}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
+              {currentQ.type === "text" ? (
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    placeholder={currentQ.placeholder}
+                    value={currentAnswer || ""}
+                    onChange={(e) => handleAnswer(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                  />
+                </div>
+              ) : (
+                <RadioGroup value={currentAnswer || ""} onValueChange={handleAnswer}>
+                  {currentQ.options.map((option) => (
+                    <div
+                      key={option.value}
+                      className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
+                    >
+                      <RadioGroupItem value={option.value} id={option.value} className="mt-1" />
+                      <Label htmlFor={option.value} className="flex-1 cursor-pointer leading-relaxed">
+                        {option.label}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              )}
 
               <div className="flex justify-between pt-6">
                 <Button variant="outline" onClick={prevQuestion} disabled={currentQuestion === 0}>
