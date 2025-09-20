@@ -9,6 +9,7 @@ import Link from "next/link"
 import { AIAnalysisDialog } from "@/components/ai-analysis-dialog"
 import { StudentDetailsDialog } from "@/components/student-details-dialog"
 import { DeleteStudentButton } from "@/components/delete-student-button"
+import { generateUniqueRandomName } from "@/lib/random-names"
 
 interface StudentAssessment {
   id: string
@@ -96,28 +97,7 @@ export default async function TeacherDashboard() {
   }
 
   const getStudentDisplayName = (assessment: StudentAssessment) => {
-    // Try first name + last name
-    if (assessment.profiles?.first_name && assessment.profiles?.last_name) {
-      return `${assessment.profiles.first_name} ${assessment.profiles.last_name}`
-    }
-
-    // Try just first name
-    if (assessment.profiles?.first_name) {
-      return assessment.profiles.first_name
-    }
-
-    // Use email username (part before @)
-    if (assessment.profiles?.email) {
-      const emailUsername = assessment.profiles.email.split("@")[0]
-      // Capitalize first letter and replace dots/underscores with spaces
-      return emailUsername
-        .replace(/[._]/g, " ")
-        .split(" ")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ")
-    }
-
-    return "Student"
+    return generateUniqueRandomName(assessment.student_id)
   }
 
   return (
@@ -201,10 +181,7 @@ export default async function TeacherDashboard() {
                           </AIAnalysisDialog>
                           <DeleteStudentButton
                             assessmentId={assessment.id}
-                            studentName={
-                              /* Using improved name display function */
-                              getStudentDisplayName(assessment)
-                            }
+                            studentName={getStudentDisplayName(assessment)}
                           />
                         </div>
                       </div>

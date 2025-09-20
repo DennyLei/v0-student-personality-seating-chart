@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     console.log("[v0] Input students:", students.length)
     console.log("[v0] Classroom layout:", classroomLayout)
 
-    const { object } = await generateObject({
+    const aiOptimizationPromise = generateObject({
       model: xai("grok-4"),
       schema: seatingAssignmentSchema,
       messages: [
@@ -89,15 +89,18 @@ Please assign each student to a specific row and column position with detailed r
       temperature: 0.3,
     })
 
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("AI optimization timeout after 10 seconds")), 10000)
+    })
+
+    const { object } = (await Promise.race([aiOptimizationPromise, timeoutPromise])) as any
+
     const endTime = Date.now()
     console.log(`[v0] AI optimization completed in ${endTime - startTime}ms`)
     console.log(`[v0] Generated ${object.assignments.length} assignments`)
 
     return Response.json(object)
-  } catch (error) {
-    console.error("[v0] Error in AI seating optimization:", error)
-
-    console.log("[v0] Falling back to simple seating algorithm")
+  } catch (_) {
     const fallbackResult = generateSimpleSeating(students, classroomLayout)
     return Response.json(fallbackResult)
   }

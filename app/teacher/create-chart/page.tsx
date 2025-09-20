@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
 import { Brain, Users, ArrowLeft, Sparkles, Save, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { generateUniqueRandomName } from "@/lib/random-names"
 
 interface StudentAssessment {
   id: string
@@ -182,28 +183,7 @@ export default function CreateChartPage() {
   }
 
   const getStudentName = (student: StudentAssessment) => {
-    // Try first name + last name
-    if (student.profiles?.first_name && student.profiles?.last_name) {
-      return `${student.profiles.first_name} ${student.profiles.last_name}`
-    }
-
-    // Try just first name
-    if (student.profiles?.first_name) {
-      return student.profiles.first_name
-    }
-
-    // Use email username (part before @)
-    if (student.profiles?.email) {
-      const emailUsername = student.profiles.email.split("@")[0]
-      // Capitalize first letter and replace dots/underscores with spaces
-      return emailUsername
-        .replace(/[._]/g, " ")
-        .split(" ")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ")
-    }
-
-    return "Student"
+    return generateUniqueRandomName(student.student_id)
   }
 
   const saveSeatingChart = async () => {
