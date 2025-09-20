@@ -32,22 +32,24 @@ export function DeleteStudentButton({ assessmentId, studentName }: DeleteStudent
     const supabase = createClient()
 
     try {
-      console.log("[v0] Deleting student assessment:", assessmentId)
+      console.log("[v0] Attempting to delete assessment with ID:", assessmentId)
 
-      const { error } = await supabase.from("student_assessments").delete().eq("id", assessmentId)
+      const { data, error } = await supabase.from("student_assessments").delete().eq("id", assessmentId).select()
+
+      console.log("[v0] Delete result:", { data, error })
 
       if (error) {
+        console.error("[v0] Delete error:", error)
         throw error
       }
 
-      console.log("[v0] Student assessment deleted successfully")
+      console.log("[v0] Successfully deleted assessment")
       setIsOpen(false)
 
-      // Refresh the page to update the list
-      router.refresh()
+      window.location.reload()
     } catch (error) {
-      console.error("[v0] Error deleting student assessment:", error)
-      alert("Error deleting student assessment. Please try again.")
+      console.error("[v0] Error in handleDelete:", error)
+      alert(`Error deleting student assessment: ${error.message || "Unknown error"}. Please try again.`)
     } finally {
       setIsDeleting(false)
     }
